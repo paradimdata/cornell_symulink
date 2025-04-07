@@ -1,18 +1,7 @@
-import os 
-import re
-from collections import namedtuple
+import os
+from pathlib import Path
 
-def extract_three_digit_numbers(path):
-    return re.findall(r'(?<!\d)\d{3}(?!\d)', path)
-
-def extract_three_digits_after_240(path):
-    return re.findall(r'240(\d{3})', path)
-
-def extract_three_digits_after_230(path):
-    return re.findall(r'230(\d{3})', path)
-
-def extract_three_digits_after_20190(path):
-    return re.findall(r'20190(\d{3})', path)
+from common import SortedID, extract_three_digit_numbers, extract_three_digits_after
 
 def file_to_project(filepath, timestamps):
     # filepath is a python Path object that specifies the file to categorize.
@@ -29,7 +18,7 @@ def file_to_project(filepath, timestamps):
     # value must be a NamedTuple or Object with the following elements:
     #    project_id : integer (or None), the project number the file is associated with.
     #                 e.g. 329 or 126 or None if unknown.
-    #    folder_path : the path, excluding filename (or None), where this object should appear in the project data. 
+    #    project_path : the path, excluding filename (or None), where this object should appear in the project data.
     #                  e.g. "rheed1/02-28-2024" or "mbe/05-16-2025/Sample116" or None if unknown.
     #    confidence : integer representing the confidence in the assignment
     #                 e.g. 3=HIGH, 2=MEDIUM, 1=LOW, 0=NONE.
@@ -38,50 +27,44 @@ def file_to_project(filepath, timestamps):
 
     if not filepath:
         raise ValueError("ERROR: a file path is required")
-    if not timestamps:
-        raise ValueError("ERROR: workbook_name input must end with '.xlsx'")
-    if not "/" in filepath:
-        raise ValueError("ERROR: file path is not a path")
-    
-    SortedID = namedtuple("SortedID", ["provenance_id", "project_path", "confidence", "extra", "why"])
 
-    folders = filepath.split("/")
-    final_path = filepath
+    filepath = Path(filepath) # should already be a Path object, but just in case; note leading "./" are trimmed automatically by Path
+    folders = list(filepath.parts)
+    final_path = str(filepath)
 
     # Name follows prescribed naming structure
-    if folders[1].isdigit() and len(folders[1]) == 3:
-        base_path = './' + folders[1]
-        final_path = os.path.relpath(filepath, base_path)
-        id = folders[1]
+    if folders[0].isdigit() and len(folders[0]) == 3:
+        base_path = './' + folders[0]
+        id = folders[0]
+        path = str(os.path.relpath(filepath, base_path))
+        confidence = 3
+        extra = "Path robust, high confidence in project ID "
+        why = "Follows prescribed naming structure"
+    elif ".im" in folders[0]:
+        id = folders[0][23:27]
         path = final_path
         confidence = 3
         extra = "Path robust, high confidence in project ID "
         why = "Follows prescribed naming structure"
-    elif ".im" in folders[1]:
-        id = folders[1][23:27]
-        path = final_path
-        confidence = 3
-        extra = "Path robust, high confidence in project ID "
-        why = "Follows prescribed naming structure"
-    elif " " in folders[1]:
-        for i in folders[1].split(" "):
+    elif " " in folders[0]:
+        for i in folders[0].split(" "):
             if i.isdigit() and len(i) == 3:
                 id = i
                 confidence = 3
             else:
-                id = folders[1].split(" ")[0]
+                id = folders[0].split(" ")[0]
                 confidence = 2
         path = final_path
         extra = "Path robust, high confidence in project ID "
         why = "Follows prescribed naming structure"
-    elif len(extract_three_digits_after_240(filepath)) >= 1:
-        id = extract_three_digits_after_240(filepath)[0]
+    elif len(extract_three_digits_after(filepath, r'240')) >= 1:
+        id = extract_three_digits_after(filepath, r'240')[0]
         path = final_path
         confidence = 3
         extra = "Path robust, high confidence in project ID "
         why = "Follows prescribed naming structure"
     elif ".im" in folders[-1]:
-        id = folders[1][23:27]
+        id = folders[0][23:27]
         path = final_path
         confidence = 2
         extra = "Path robust, project ID moderate confidence"
@@ -92,14 +75,14 @@ def file_to_project(filepath, timestamps):
         confidence = 3
         extra = "Path robust, high confidence in project ID "
         why = "Distinct project ID in path"
-    elif len(extract_three_digits_after_230(filepath)) >= 1:
-        id = extract_three_digits_after_230(filepath)[0]
+    elif len(extract_three_digits_after(filepath, '230')) >= 1:
+        id = extract_three_digits_after(filepath, '230')[0]
         path = final_path
         confidence = 2
         extra = "Path robust, moderate confidence in project ID "
         why = "Follows prescribed naming structure"
-    elif len(extract_three_digits_after_20190(filepath)) >= 1:
-        id = extract_three_digits_after_20190(filepath)[0]
+    elif len(extract_three_digits_after(filepath, '20190')) >= 1:
+        id = extract_three_digits_after(filepath, '20190')[0]
         path = final_path
         confidence = 2
         extra = "Path robust, moderate confidence in project ID "
@@ -110,6 +93,5 @@ def file_to_project(filepath, timestamps):
         confidence = 0
         extra = "Path not robust, no project ID "
         why = "No ID found, path unknown"
-
 
     return SortedID(provenance_id=id,project_path=path, confidence=confidence, extra=extra, why=why)

@@ -1,9 +1,6 @@
-import os 
-import re
-from collections import namedtuple
-
-def extract_three_digit_numbers(path):
-    return re.findall(r'(?<!\d)\d{3}(?!\d)', path)
+import os
+from pathlib import Path
+from common import SortedID, extract_three_digit_numbers
 
 def file_to_project(filepath, timestamps):
     # filepath is a python Path object that specifies the file to categorize.
@@ -20,7 +17,7 @@ def file_to_project(filepath, timestamps):
     # value must be a NamedTuple or Object with the following elements:
     #    project_id : integer (or None), the project number the file is associated with.
     #                 e.g. 329 or 126 or None if unknown.
-    #    folder_path : the path, excluding filename (or None), where this object should appear in the project data. 
+    #    project_path : the path, excluding filename (or None), where this object should appear in the project data. 
     #                  e.g. "rheed1/02-28-2024" or "mbe/05-16-2025/Sample116" or None if unknown.
     #    confidence : integer representing the confidence in the assignment
     #                 e.g. 3=HIGH, 2=MEDIUM, 1=LOW, 0=NONE.
@@ -29,14 +26,9 @@ def file_to_project(filepath, timestamps):
 
     if not filepath:
         raise ValueError("ERROR: a file path is required")
-    if not timestamps:
-        raise ValueError("ERROR: workbook_name input must end with '.xlsx'")
-    if not "/" in filepath:
-        raise ValueError("ERROR: file path is not a path")
-    
-    SortedID = namedtuple("SortedID", ["provenance_id", "project_path", "confidence", "extra", "why"])
 
-    final_path = filepath
+    filepath = Path(filepath) # should already be a Path object, but just in case; note leading "./" are trimmed automatically by Path
+    final_path = str(filepath)
 
     if len(extract_three_digit_numbers(filepath)) >= 1:
         id = extract_three_digit_numbers(filepath)[0]

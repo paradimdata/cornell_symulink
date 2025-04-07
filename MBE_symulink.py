@@ -1,9 +1,6 @@
-import os 
-import re
-from collections import namedtuple
-
-def extract_three_digit_numbers(path):
-    return re.findall(r'(?<!\d)\d{3}(?!\d)', path)
+import os
+from pathlib import Path
+from common import SortedID, extract_three_digit_numbers
 
 def file_to_project(filepath, timestamps):
     # filepath is a python Path object that specifies the file to categorize.
@@ -20,7 +17,7 @@ def file_to_project(filepath, timestamps):
     # value must be a NamedTuple or Object with the following elements:
     #    project_id : integer (or None), the project number the file is associated with.
     #                 e.g. 329 or 126 or None if unknown.
-    #    folder_path : the path, excluding filename (or None), where this object should appear in the project data. 
+    #    project_path : the path, excluding filename (or None), where this object should appear in the project data. 
     #                  e.g. "rheed1/02-28-2024" or "mbe/05-16-2025/Sample116" or None if unknown.
     #    confidence : integer representing the confidence in the assignment
     #                 e.g. 3=HIGH, 2=MEDIUM, 1=LOW, 0=NONE.
@@ -29,25 +26,20 @@ def file_to_project(filepath, timestamps):
 
     if not filepath:
         raise ValueError("ERROR: a file path is required")
-    if not timestamps:
-        raise ValueError("ERROR: workbook_name input must end with '.xlsx'")
-    if not "/" in filepath:
-        raise ValueError("ERROR: file path is not a path")
-    
-    SortedID = namedtuple("SortedID", ["provenance_id", "project_path", "confidence", "extra", "why"])
-    
-    folders = filepath.split("/")
-    file = folders[-1]
+
+    filepath = Path(filepath) # should already be a Path object, but just in case; note leading "./" are trimmed automatically by Path
+    folders = list(filepath.parts)
+    file = filepath.name
     parts = file.split("_")
 
-    if len(folders) > 2:
-        if folders[1].isdigit() and len(folders[2]) == 6:
-            base_path = './' + folders[1] + '/' + folders[2]
-            final_path = os.path.relpath(filepath, base_path)
+    if len(folders) > 1:
+        if folders[0].isdigit() and len(folders[1]) == 6:
+            base_path = './' + folders[0] + '/' + folders[1]
+            final_path = str(os.path.relpath(filepath, base_path))
         else:
-            final_path = filepath
+            final_path = str(filepath)
     else:
-        final_path = filepath
+        final_path = str(filepath)
 
     # Apparent MBE naming structure:
     # PDC_MBE316GM1_20250108_4_321_(SnWO4_109).zip
