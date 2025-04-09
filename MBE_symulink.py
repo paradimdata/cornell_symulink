@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from common import SortedID, extract_three_digit_numbers
+from common import SortedID, extract_eight_digit_numbers, extract_three_digits_after
 
 def file_to_project(filepath, timestamps):
     # filepath is a python Path object that specifies the file to categorize.
@@ -62,26 +62,17 @@ def file_to_project(filepath, timestamps):
         confidence = 1
         extra = "Path robust, no project ID "
         why = "Follows prescribed naming structure, project ID not correct"
-    elif extract_three_digit_numbers(filepath):
-        ids = extract_three_digit_numbers(filepath)
-        if ids[0] == '316' and len(ids) > 1:
-            id = ids[1]
-            path = final_path
-            confidence = 2
-            extra = "Path not robust, project ID "
-            why = "Exactly 3 digit number found, assumed to be project ID"
-        elif ids[0] == '316' and len(ids) <= 1:
-            id = None
-            path = final_path
-            confidence = 1
-            extra = "Path not robust, no project ID "
-            why = "No project ID found, path not robust"
-        else:
-            id = ids[0]
-            path = final_path
-            confidence = 2
-            extra = "Path not robust, project ID "
-            why = "Exactly 3 digit number found, assumed to be project ID"
+    elif len(extract_eight_digit_numbers(filepath)) >= 1:
+        for year in range(20180, 20300, 10):
+            pattern = str(year)
+            matches = extract_three_digits_after(filepath, pattern)
+            if matches:
+                id = matches[0]
+                path = final_path
+                confidence = 3
+                extra = "Path robust, project ID follows structure"
+                why = "Follows prescribed naming structure"
+                break
     else:
         id = None
         path = final_path
