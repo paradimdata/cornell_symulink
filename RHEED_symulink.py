@@ -63,7 +63,7 @@ def file_to_project(filepath, timestamps):
         confidence = 3
         extra = "Path robust, high confidence in project ID "
         why = "Follows prescribed naming structure"
-    elif ".im" in folders[-1]:
+    elif ".img" in folders[-1] and len(folders[-1]) == 57 and folders[-1][23:27].isdigit():
         id = folders[0][23:27]
         path = final_path
         confidence = 2
