@@ -73,11 +73,14 @@ def file_to_project(filepath, timestamps):
                 extra = "Path robust, project ID follows structure"
                 why = "Follows prescribed naming structure"
                 break
-        id = None
-        path = final_path
-        confidence = 0
-        extra = "Path not robust, no project ID "
-        why = "Does not follow prescribed naming structure, project ID not correct"
+        if id:
+            return SortedID(provenance_id=id,project_path=path, confidence=confidence, extra=extra, why=why)
+        else:
+            id = None
+            path = final_path
+            confidence = 0
+            extra = "Path not robust, no project ID "
+            why = "Does not follow prescribed naming structure, project ID not correct"
     else:
         id = None
         path = final_path
