@@ -33,60 +33,77 @@ def file_to_project(filepath, timestamps):
     final_path = str(filepath)
 
     # Name follows prescribed naming structure
-    if folders[0].isdigit() and len(folders[0]) == 3:
-        base_path = './' + folders[0]
-        id = folders[0]
-        path = str(os.path.relpath(filepath, base_path))
-        confidence = 3
-        extra = "Path robust, high confidence in project ID "
-        why = "Follows prescribed naming structure"
-    elif ".im" in folders[0]:
+    for i in folders:
+        if i.isdigit() and len(i) == 3:
+            base_path = './' + i
+            id = i
+            path = str(os.path.relpath(filepath, base_path))
+            confidence = 3
+            extra = "Path robust, high confidence in project ID "
+            why = "Follows prescribed naming structure"
+            return SortedID(provenance_id=id,project_path=path, confidence=confidence, extra=extra, why=why)
+    if ".img" in folders[-1] and len(folders[-1]) == 57 and folders[-1][23:27].isdigit():
         id = folders[0][23:27]
         path = final_path
         confidence = 3
         extra = "Path robust, high confidence in project ID "
         why = "Follows prescribed naming structure"
-    elif " " in folders[0]:
-        for i in folders[0].split(" "):
-            if i.isdigit() and len(i) == 3:
-                id = i
-                confidence = 3
-            else:
-                id = folders[0].split(" ")[0]
-                confidence = 2
+    elif len(extract_three_digits_after(filepath, r'250')) >= 1:
+        id = extract_three_digits_after(filepath, r'250')[0]
         path = final_path
+        confidence = 2
         extra = "Path robust, high confidence in project ID "
         why = "Follows prescribed naming structure"
     elif len(extract_three_digits_after(filepath, r'240')) >= 1:
         id = extract_three_digits_after(filepath, r'240')[0]
         path = final_path
-        confidence = 3
+        confidence = 2
         extra = "Path robust, high confidence in project ID "
         why = "Follows prescribed naming structure"
-    elif ".img" in folders[-1] and len(folders[-1]) == 57 and folders[-1][23:27].isdigit():
-        id = folders[0][23:27]
-        path = final_path
-        confidence = 2
-        extra = "Path robust, project ID moderate confidence"
-        why = "Project ID moderate confidence, robust path"
-    elif len(extract_three_digit_numbers(filepath)) >= 1:
-        id = (extract_three_digit_numbers(filepath))[0]
-        path = final_path
-        confidence = 3
-        extra = "Path robust, high confidence in project ID "
-        why = "Distinct project ID in path"
-    elif len(extract_three_digits_after(filepath, '230')) >= 1:
-        id = extract_three_digits_after(filepath, '230')[0]
+    elif len(extract_three_digits_after(filepath, r'230')) >= 1:
+        id = extract_three_digits_after(filepath, r'230')[0]
         path = final_path
         confidence = 2
         extra = "Path robust, moderate confidence in project ID "
         why = "Follows prescribed naming structure"
-    elif len(extract_three_digits_after(filepath, '20190')) >= 1:
-        id = extract_three_digits_after(filepath, '20190')[0]
+    elif len(extract_three_digits_after(filepath, r'220')) >= 1:
+        id = extract_three_digits_after(filepath, r'220')[0]
         path = final_path
         confidence = 2
         extra = "Path robust, moderate confidence in project ID "
         why = "Follows prescribed naming structure"
+    elif len(extract_three_digits_after(filepath, r'210')) >= 1:
+        id = extract_three_digits_after(filepath, r'210')[0]
+        path = final_path
+        confidence = 2
+        extra = "Path robust, moderate confidence in project ID "
+        why = "Follows prescribed naming structure"
+    elif len(extract_three_digits_after(filepath, r'200')) >= 1:
+        id = extract_three_digits_after(filepath, r'200')[0]
+        path = final_path
+        confidence = 2
+        extra = "Path robust, moderate confidence in project ID "
+        why = "Follows prescribed naming structure"
+    elif len(extract_three_digits_after(filepath, r'190')) >= 1:
+        id = extract_three_digits_after(filepath, r'190')[0]
+        path = final_path
+        confidence = 2
+        extra = "Path robust, moderate confidence in project ID "
+        why = "Follows prescribed naming structure"
+    elif 'PARADIM' in str(filepath):
+        for i in folders:
+            if i[0:8] == 'PARADIM-':
+                id = i[8:11]
+                path = final_path
+                confidence = 2
+                extra = "Path found, probable project ID "
+                why = "Probable project ID"
+    elif " " in folders[1] and folders[1].split(" ")[0].isdigit() and len(folders[1].split(" ")[0]) == 3:
+        id = folders[1].split(" ")[0]
+        path = final_path
+        confidence = 3
+        extra = "Path found, project ID found"
+        why = "Project ID and path found"
     else:
         id = None
         path = final_path
@@ -95,3 +112,5 @@ def file_to_project(filepath, timestamps):
         why = "No ID found, path unknown"
 
     return SortedID(provenance_id=id,project_path=path, confidence=confidence, extra=extra, why=why)
+
+#Hanjong_CeO2_2024
