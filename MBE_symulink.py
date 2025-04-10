@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from common import SortedID, extract_three_digits_after, extract_eight_digit_numbers
+from common import SortedID, extract_three_digit_numbers
 
 def file_to_project(filepath, timestamps):
     # filepath is a python Path object that specifies the file to categorize.
@@ -31,6 +31,8 @@ def file_to_project(filepath, timestamps):
     folders = list(filepath.parts)
     file = filepath.name
     parts = file.split("_")
+    if "." in parts[-1]:
+        parts[-1] = parts[-1].split(".")[0]
 
     if len(folders) > 1:
         if folders[0].isdigit() and len(folders[1]) == 6:
@@ -50,31 +52,26 @@ def file_to_project(filepath, timestamps):
     # 321 == project number 
     # (SnWO4_109) == material
 
+    id = None
+    path = final_path
+    confidence = 0
+    extra = "Path not robust, no project ID "
+    why = "Does not follow prescribed naming structure, project ID not correct"
+
     if len(parts) >= 5 and parts[4].isdigit() and len(parts[4]) == 3:
         id = parts[4]
         path = final_path
         confidence = 3
         extra = "Path robust, high confidence in project ID "
         why = "Follows prescribed naming structure"
-    elif len(parts) >= 5 and  parts[4].isdigit() and len(parts[4]) != 3:
-        id = None
-        path = final_path
-        confidence = 1
-        extra = "Path robust, no project ID "
-        why = "Follows prescribed naming structure, project ID not correct"
-    elif len(extract_eight_digit_numbers(filepath)) >= 1:
-        for year in range(20170, 20500, 10):
-            pattern = str(year)
-            matches = extract_three_digits_after(filepath, pattern)
-            if matches:
-                id = matches[0]
-                path = final_path
-                confidence = 3
-                extra = "Path robust, project ID follows structure"
-                why = "Follows prescribed naming structure"
-                break
-        if id:
-            return SortedID(provenance_id=id,project_path=path, confidence=confidence, extra=extra, why=why)
+    elif len(parts) >= 5 and parts[4][0:3].isdigit():
+        num = extract_three_digit_numbers(parts[4])
+        if num[0] == parts[4][0:3]:
+            id = num[0]
+            path = final_path
+            confidence = 3
+            extra = "Path robust, high confidence in project ID "
+            why = "Follows prescribed naming structure"
         else:
             id = None
             path = final_path
