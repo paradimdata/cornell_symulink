@@ -42,13 +42,7 @@ def file_to_project(filepath, timestamps):
             extra = "Path robust, high confidence in project ID "
             why = "Follows prescribed naming structure"
             return SortedID(provenance_id=id,project_path=path, confidence=confidence, extra=extra, why=why)
-    if ".img" in folders[-1] and len(folders[-1]) == 57 and folders[-1][23:27].isdigit():
-        id = folders[0][23:27]
-        path = final_path
-        confidence = 3
-        extra = "Path robust, high confidence in project ID "
-        why = "Follows prescribed naming structure"
-    elif 'PARADIM' in str(filepath):
+    if 'PARADIM' in str(filepath):
         for i in folders:
             if i[0:8] == 'PARADIM-':
                 id = i[8:11]
